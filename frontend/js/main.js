@@ -28,8 +28,8 @@ class App {
       bright: Number(store.get('pk_bright', '100')),
       quality: store.get('pk_quality', '1'),
     };
-    // Při spuštění lokálně přes server (localhost / domácí síť) se adresa serveru doplní sama.
-    if ((!this.settings.server || /TVOJE-APLIKACE/i.test(this.settings.server)) && /^https?:$/.test(location.protocol) && /^(localhost|127\.0\.0\.1|\[::1\]|192\.168\.|10\.)/.test(location.hostname)) {
+    // Když není nastavená adresa serveru a stránku poskytuje sám herní server (localhost, Render…), použije se stejná adresa.
+    if ((!this.settings.server || /TVOJE-APLIKACE/i.test(this.settings.server)) && /^https?:$/.test(location.protocol)) {
       this.settings.server = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
     }
     this.muted = store.get('pk_mute', '0') === '1';
