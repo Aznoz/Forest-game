@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a09">
+<title>Prokletá komora</title>
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+<script src="config.js"></script>
+</head>
+<body data-screen="menu">
+
+<canvas id="gl"></canvas>
+<div id="fx-vignette"></div>
+<div id="fx-grain"></div>
+<div id="fx-flash"></div>
+<div id="fx-hurt"></div>
+
+<!-- ============ MENU ============ -->
+<section id="menu" class="screen">
+  <div class="panel menu-panel">
+    <h1 class="logo"><span>PROKLETÁ</span><span>KOMORA</span></h1>
+    <p class="tagline">Ruská ruleta v lese, odkud se nikdo nevrací.</p>
+
+    <label class="field">Tvoje jméno
+      <input id="inName" maxlength="14" placeholder="Hráč" autocomplete="off" spellcheck="false">
+    </label>
+
+    <button id="btnCreate" class="btn primary">Vytvořit hru</button>
+    <div class="join-row">
+      <input id="inCode" maxlength="4" placeholder="KÓD" autocomplete="off" spellcheck="false">
+      <button id="btnJoin" class="btn">Připojit se</button>
+    </div>
+    <button id="btnQuick" class="btn ghost">Rychlá hra proti botům</button>
+
+    <div class="links">
+      <button id="btnRules" class="link">Pravidla a karty</button>
+      <button id="btnSettings" class="link">Nastavení</button>
+    </div>
+    <div id="netStatus" class="netstatus"></div>
+  </div>
+  <div class="menu-foot">2–4 hráči · online · pro dospělé nervy</div>
+</section>
+
+<!-- ============ LOBBY ============ -->
+<section id="lobby" class="screen">
+  <div class="panel lobby-panel">
+    <h2>Místnost <button id="lobbyCode" class="code" title="Kliknutím zkopíruješ kód">----</button></h2>
+    <p class="hint">Pošli kód kamarádům. Hrát se dá ve 2 až 4. Prázdná místa zaplní boti.</p>
+    <ul id="lobbyPlayers" class="plist"></ul>
+    <div id="lobbyHost" class="host-tools">
+      <div class="stepper">
+        <span>Životy</span>
+        <button id="livesMinus" class="sq">−</button>
+        <b id="livesVal">4</b>
+        <button id="livesPlus" class="sq">+</button>
+      </div>
+      <button id="btnAddBot" class="btn small">+ Přidat bota</button>
+    </div>
+    <button id="btnStart" class="btn primary">Zahájit hru</button>
+    <p id="lobbyWait" class="hint"></p>
+    <button id="btnLeaveLobby" class="link">Odejít</button>
+  </div>
+</section>
+
+<!-- ============ HUD ============ -->
+<section id="hud" class="screen">
+  <div id="topbar">
+    <div class="tb-left">
+      <span id="hudCode" class="tb-code"></span>
+      <span id="hudDir" class="tb-dir" title="Směr tahů"></span>
+    </div>
+    <div class="tb-right">
+      <button id="btnRules2" class="icon" title="Pravidla a karty">?</button>
+      <button id="btnSound" class="icon" title="Zvuk">♪</button>
+      <button id="btnSettings2" class="icon" title="Nastavení">⚙</button>
+      <button id="btnLeaveGame" class="icon" title="Odejít ze hry">✕</button>
+    </div>
+  </div>
+
+  <div id="banner"><span id="bannerText"></span><span id="bannerTime"></span></div>
+  <div id="plates"></div>
+  <div id="announce"></div>
+  <div id="peek"></div>
+  <div id="cardplay"></div>
+
+  <div id="cylBox">
+    <svg id="cylSvg" viewBox="0 0 160 160" aria-label="Válec revolveru"></svg>
+    <div id="cylCount"></div>
+  </div>
+
+  <div id="meBox"></div>
+  <div id="log"></div>
+
+  <div id="bottom">
+    <div id="actionbar"></div>
+    <div id="hand"></div>
+  </div>
+</section>
+
+<!-- ============ OVERLAYS ============ -->
+<div id="ovRules" class="overlay"><div class="ov-panel wide">
+  <button class="ov-close" data-close>✕</button>
+  <h2>Jak se hraje</h2>
+  <div id="rulesText" class="rules"></div>
+  <h2>Karty</h2>
+  <div id="rulesCards" class="codex"></div>
+</div></div>
+
+<div id="ovSettings" class="overlay"><div class="ov-panel">
+  <button class="ov-close" data-close>✕</button>
+  <h2>Nastavení</h2>
+  <label class="field">Hlasitost <input id="setVol" type="range" min="0" max="100" value="70"></label>
+  <label class="field">Jas obrazu <input id="setBright" type="range" min="50" max="200" value="100"></label>
+  <label class="field">Kvalita grafiky
+    <select id="setQuality"><option value="1">Vysoká</option><option value="0">Nízká (slabší počítače, telefony)</option></select>
+  </label>
+  <label class="field">Adresa herního serveru
+    <input id="setServer" placeholder="wss://tvoje-aplikace.onrender.com" autocomplete="off" spellcheck="false">
+  </label>
+  <p id="setServerInfo" class="hint"></p>
+  <div class="btn-row">
+    <button id="btnSettingsSave" class="btn primary">Uložit</button>
+    <button id="btnServerTest" class="btn">Zkusit server</button>
+  </div>
+</div></div>
+
+<div id="ovCard" class="overlay"><div id="cardInspect"></div></div>
+
+<div id="ovOver" class="overlay"><div class="ov-panel over">
+  <div id="overTitle" class="over-title"></div>
+  <div id="overSub" class="over-sub"></div>
+  <div class="btn-row">
+    <button id="btnAgain" class="btn primary">Hrát znovu</button>
+    <button id="btnLeaveOver" class="btn">Odejít</button>
+  </div>
+  <p id="overWait" class="hint"></p>
+</div></div>
+
+<div id="conn"></div>
+<div id="toast"></div>
+<div id="fatal"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
